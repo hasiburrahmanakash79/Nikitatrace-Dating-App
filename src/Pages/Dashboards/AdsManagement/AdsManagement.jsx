@@ -111,6 +111,10 @@ const AdsManagement = () => {
     }
   };
 
+  const hasPreviewImage = () => {
+    return currentAd.banner || adData.banner
+  }
+
   return (
     <>
     <h1 className="text-3xl font-bold text-gray-800 mb-8">Ads Management</h1>
@@ -176,7 +180,7 @@ const AdsManagement = () => {
               <div className="space-y-6">
                 <div className="flex flex-col items-center">
                   <div className="w-full h-40 border-2 border-dashed border-[#D4A017] rounded-lg mb-4 relative">
-                    {currentAd ? (
+                    {currentAd || adData.banner ? (
                       <img src={previewImage} alt="Ad Preview" className="w-full h-full object-cover rounded-lg" />
                     ) : (
                       <p className="text-gray-500 text-center mt-16">+ Select Image</p>
