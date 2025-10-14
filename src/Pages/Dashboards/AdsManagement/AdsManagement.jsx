@@ -12,16 +12,8 @@ const AdsManagement = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [errors, setErrors] = useState({});
-  const [adData, setAdData] = useState({
-    id: "",
-    title: "",
-    company: "",
-    link: "",
-    banner: "",
-    start_date: "",
-    end_date: "",
-    note: "",
-  });
+  const [adData, setAdData] = useState({});
+  const [currentAd, setCurrentAd] = useState(null)
 
   const { data, loading } = useFetch(fetchAdUrl);
   const { postResource, loading: submitting } = useForm();
@@ -30,9 +22,20 @@ const AdsManagement = () => {
   useEffect(() => {
     if (data?.title) {
       setAdData(data);
+      setCurrentAd(data)
       setPreviewImage(typeof data.banner === "string" ? data.banner : null);
     }
   }, [data]);
+
+  function isValidUrl(string) {
+    try {
+      new URL(string);
+      console.log("link is", string)
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   const validateForm = () => {
     const tempErrors = {};
@@ -43,6 +46,9 @@ const AdsManagement = () => {
     if (!adData.end_date) tempErrors.end_date = "End date is required";
     if (!adData.banner && !previewImage) tempErrors.banner = "Banner image is required";
     if (!adData.note?.trim()) tempErrors.note = "Note is required";
+    if(adData.link && !isValidUrl(adData.link)) {
+      tempErrors.link = "Invalid Url"
+    }
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   };
@@ -64,6 +70,7 @@ const AdsManagement = () => {
       const url = action === "add" ? createAddUrl : editAdUrl;
       const result = await postResource(url, formData);
       setAdData(result);
+      setCurrentAd(result);
       setPreviewImage(null);
       setIsAddModalOpen(false);
       toast.success(action === "edit" ? "Successfully updated!" : "New advertisement created successfully", {
@@ -79,7 +86,9 @@ const AdsManagement = () => {
     try {
       deleteResource(deleteAdUrl(adData.id));
       setIsDeleteModalOpen(false);
-      setAdData({ id: "", title: "", company: "", link: "", banner: "", start_date: "", end_date: "", note: "" });
+      // setAdData({ id: "", title: "", company: "", link: "", banner: "", start_date: "", end_date: "", note: "" });
+      setAdData({});
+      setCurrentAd(null)
       toast.success("Advertisement deleted successfully!", {
         duration: 2000,
         position: "top-right",
@@ -119,28 +128,28 @@ const AdsManagement = () => {
               }}
               className="py-2 px-5 bg-[#CE8B38] rounded-xl hover:shadow-2xl text-white"
             >
-              {data ? "+ Update" : "Add"}
+              {currentAd ? "+ Update" : "Add"}
             </button>
           </div>
-          {data ? (
+          {currentAd ? (
             <>
               <div className="flex gap-8 items-start p-4 rounded-lg shadow-sm">
                 <ul className="flex-1 list-inside space-y-2 text-gray-700">
-                  <li><strong>Title:</strong> {data.title}</li>
-                  <li><strong>Company:</strong> {data.company}</li>
+                  <li><strong>Title:</strong> {currentAd.title}</li>
+                  <li><strong>Company:</strong> {currentAd.company}</li>
                   <li>
                     <strong>Link:</strong>{" "}
-                    <a href={data.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                      {data.link}
+                    <a href={currentAd.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                      {currentAd.link}
                     </a>
                   </li>
-                  <li><strong>Start Date:</strong> {data.start_date}</li>
-                  <li><strong>End Date:</strong> {data.end_date}</li>
-                  <li><strong>Note:</strong> {data.note}</li>
+                  <li><strong>Start Date:</strong> {currentAd.start_date}</li>
+                  <li><strong>End Date:</strong> {currentAd.end_date}</li>
+                  <li><strong>Note:</strong> {currentAd.note}</li>
                 </ul>
-                {data.banner && (
+                {currentAd.banner && (
                   <div className="w-56 h-56 rounded-lg overflow-hidden shadow-sm flex-shrink-0">
-                    <img src={data.banner} alt="Ad Banner" className="w-full h-full object-cover" />
+                    <img src={currentAd.banner} alt="Ad Banner" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>
@@ -161,13 +170,13 @@ const AdsManagement = () => {
           <CommonModal
             isOpen={isAddModalOpen}
             onClose={() => setIsAddModalOpen(false)}
-            title={data ? "Edit Ad" : "Add New Ad"}
+            title={currentAd ? "Edit Ad" : "Add New Ad"}
           >
-            <form onSubmit={(event) => handleSubmit(event, data ? "edit" : "add")} encType="multipart/form-data">
+            <form onSubmit={(event) => handleSubmit(event, currentAd ? "edit" : "add")} encType="multipart/form-data">
               <div className="space-y-6">
                 <div className="flex flex-col items-center">
                   <div className="w-full h-40 border-2 border-dashed border-[#D4A017] rounded-lg mb-4 relative">
-                    {previewImage ? (
+                    {currentAd ? (
                       <img src={previewImage} alt="Ad Preview" className="w-full h-full object-cover rounded-lg" />
                     ) : (
                       <p className="text-gray-500 text-center mt-16">+ Select Image</p>
@@ -238,7 +247,7 @@ const AdsManagement = () => {
                   disabled={submitting}
                   className={`w-full py-2 text-white rounded-md ${submitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#D4A017]"}`}
                 >
-                  {submitting ? (data ? "Updating..." : "Submitting...") : (data ? "Update" : "Submit")}
+                  {submitting ? (currentAd ? "Updating..." : "Submitting...") : (currentAd ? "Update" : "Submit")}
                 </button>
               </div>
             </form>
