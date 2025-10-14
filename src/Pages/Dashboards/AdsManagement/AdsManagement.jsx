@@ -71,7 +71,11 @@ const AdsManagement = () => {
       const result = await postResource(url, formData);
       setAdData(result);
       setCurrentAd(result);
-      setPreviewImage(null);
+      if (typeof result.banner === "string") {
+        setPreviewImage(result.banner);
+      } else {
+        setPreviewImage(null);
+      }
       setIsAddModalOpen(false);
       toast.success(action === "edit" ? "Successfully updated!" : "New advertisement created successfully", {
         duration: 2000,
@@ -128,6 +132,8 @@ const AdsManagement = () => {
             <button
               onClick={() => {
                 setErrors({});
+                setPreviewImage(currentAd?.banner || null);
+                setAdData(currentAd || {});
                 setIsAddModalOpen(true);
               }}
               className="py-2 px-5 bg-[#CE8B38] rounded-xl hover:shadow-2xl text-white"
